@@ -1,0 +1,162 @@
+body{
+    background-color: #f4f4f4;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    margin: 0;
+    padding: 0;
+    text-align: center;
+}
+
+h1{
+    color: #333;
+}
+
+#ExportPdf{
+    width: 300px;
+    height: 40px;
+    padding: 10px 20px;
+    margin-left: 50px;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    border-radius: 50px;
+    border: 2px solid #353131;
+    margin: 10px;
+    z-index: 1;
+}
+
+.circle {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #353131;
+    left: 15px;
+    top: 10px;
+    bottom: 0;
+    right: 0;
+    z-index: 2;
+    transition: 0.5s cubic-bezier(1,0,.8,1);
+}
+
+#ExportPdf:hover .circle{
+    width: 320px;
+    height: 40px;
+    border-radius: 50px;
+    background-color: #353131;
+
+}
+
+.arrow{
+    position: absolute;
+    color: white;
+    width: 20px;
+    height: 20px;
+    border-top: 3px solid #fff;
+    border-right: 3px solid #fff;
+    transform: rotate(45deg);
+    top: 10px;
+    left: 10px;
+    bottom: 0;
+    right: 0;
+    z-index: 2;
+    transition: 0.5s cubic-bezier(1,0,.8,1);
+}
+
+#ExportPdf:hover .arrow{
+    left: 50px;
+}
+.arrow::before{
+    content: "";
+    position: absolute;
+    width: 35px;
+    height: 3px;
+    background-color: white;
+    transform: rotate(-45deg);
+    left: -9px;
+    top: 8.5px;
+    opacity: 0;
+    transition: 0.5s;
+}
+
+#ExportPdf:hover .arrow::before{
+    left: -10px;
+    opacity: 1;
+}
+
+#ExportPdf .text{
+    position: relative;
+    top: -5px;
+    left: 10px;
+    z-index: 3;
+    font-size: 15px;
+    color: #353131;
+    line-height: 20px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-weight: 600;
+    transition: .3s;
+}
+
+#ExportPdf:hover .text{
+    color: #fff;
+}
+
+#filter_container{
+    margin-top: 25px;
+    background-color: #D9D9D9;
+    padding: 20px 40px;
+    border-radius: 15px;
+}
+
+#filter_container select{
+    padding: 10px 20px;
+    width: 250px;
+    height: 40px;
+    border: none;
+    border-radius: 15px;
+    margin: 10px;  
+}
+
+#small_charts, #large_charts {
+    font-family: 'Montserrat', sans-serif;
+}
+
+#small_charts h3 {
+    text-decoration: underline;
+    margin-top: 20px;
+
+}
+
+#small_charts table{
+    overflow-y:scroll;
+    height:350px;
+    display:block;
+}
+
+#large_charts h3{
+    margin-top: 20px;
+    text-decoration: underline;
+}
+
+#large_charts table{
+    overflow-y:scroll;
+    height:500px;
+    display:block;
+}
+
+.time_select select{
+    padding: 10px 20px;
+    width: 250px;
+    height: 40px;
+    border: none;
+    border-radius: 15px;
+    margin: 10px;  
+}
+
+#inventory{
+    margin-top: 50px;
+}
+
+#transactions{
+    margin-top: 50px;
+}
