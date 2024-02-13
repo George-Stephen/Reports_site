@@ -30,7 +30,7 @@ h1{
     height: 40px;
     border-radius: 50%;
     background-color: #353131;
-    left: 15px;
+    left: 25px;
     top: 10px;
     bottom: 0;
     right: 0;
@@ -55,7 +55,7 @@ h1{
     border-right: 3px solid #fff;
     transform: rotate(45deg);
     top: 10px;
-    left: 10px;
+    left: 5px;
     bottom: 0;
     right: 0;
     z-index: 2;
@@ -111,7 +111,7 @@ h1{
 #filter_container select{
     padding: 10px 20px;
     width: 250px;
-    height: 40px;
+    height: 50px;
     border: none;
     border-radius: 15px;
     margin: 10px;  
@@ -154,7 +154,7 @@ h1{
 }
 
 #inventory{
-    margin-top: 50px;
+    margin-top: 35px;
 }
 
 #transactions{

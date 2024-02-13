@@ -5,25 +5,23 @@ $(document).ready(function(){
         location.reload();
     }, 3600000);
 
-    var productNames = ["Product A", "Product B", "Product C"];
+    fetchCountryData();
 
-    // Populate product dropdown
-    var productDropdown = $('#product-dropdown');
-    productNames.forEach(function(product) {
-        productDropdown.append('<option value="' + product + '">' + product + '</option>');
+    $('#country-dropdown').change(function() {
+        var selectedCountry = $(this).val();
+        console.log('Selected country:', selectedCountry);
+        fetchBranches(selectedCountry);
     });
 
-    // Fetch initial data
-    fetchData('today'); // Fetch data for today initially
-
-    // Initialize pie chart with initial data
-    fetchPieData('today'); // Fetch data for today initially
-
-    // Handle dropdown change event
-    $('#time-range_2').change(function() {
-        var selectedTimeRange = $(this).val();
-        fetchPieData(selectedTimeRange);
+    $('#branch-dropdown').change(function() {
+        var selectedCountry = $('#country-dropdown').val();
+        var selectedBranch = $(this).val();
+        fetchOrders(selectedCountry, selectedBranch);
+        fetchCardsIssued(selectedCountry, selectedBranch);
+        fetchProducts(selectedBranch,selectedCountry);
     });
+
+
 
     // Handle dropdown change event
     $('#time-range, #product-dropdown').change(function() {
@@ -39,206 +37,152 @@ $(document).ready(function(){
     });
 });
 
+var Total_Quantity = 0;
 
+var BASE_URL = 'http://192.168.1.44:8085/';
 
-const coursesData = { 
-    labels: ['Cards available', 'Cards issued'], 
-    datasets: [{ 
-        data: [130, 80], 
-        backgroundColor: ['#FF6384', '#36A2EB'], 
-    }], 
-};
-
-const config = { 
-    type: 'doughnut', 
-    data: coursesData,  
-}; 
-const ctx = document.getElementById( 
-    'inventoryChart').getContext('2d'); 
-      
-new Chart(ctx, config); 
-
-
-// setting up a line graph
-function fetchData(timeRange, product) {
-    // Generate simulated data based on time range and product
-    var simulatedData = generateSimulatedData(timeRange, product);
-
-    // Process and update graph with the fetched data
-    updateLineGraph(simulatedData);
-}
-
-function generateSimulatedData(timeRange, product) {
-    // Simulate data for demonstration
-    var data = [];
-    var startDate = calculateStartDate(timeRange);
-    var currentDate = new Date(startDate);
-    var endDate = new Date();
-    
-    while (currentDate <= endDate) {
-        // Generate random revenue for the product
-        var revenue = Math.random() * 1000; // Random value for demonstration
-        data.push({
-            timestamp: currentDate.getTime(),
-            revenue: revenue
-        });
-        currentDate.setDate(currentDate.getDate() + 1); // Increment by one day
-    }
-    return data;
-}
-
-function calculateStartDate(timeRange) {
-    var startDate = new Date();
-    switch (timeRange) {
-        case 'today':
-            // Start date is the beginning of today
-            startDate.setHours(0, 0, 0, 0);
-            break;
-        case 'week':
-            // Start date is 7 days ago
-            startDate.setDate(startDate.getDate() - 7);
-            break;
-        case 'month':
-            // Start date is the beginning of the current month
-            startDate.setDate(1);
-            break;
-        case 'six-months':
-            // Start date is 6 months ago
-            startDate.setMonth(startDate.getMonth() - 6);
-            break;
-        case 'year':
-            // Start date is the beginning of the current year
-            startDate.setMonth(0, 1);
-            break;
-        default:
-            // Default to today
-            startDate.setHours(0, 0, 0, 0);
-            break;
-    }
-    return startDate;
-}
-
-var LinechartInstance;
-function updateLineGraph(data) {
-
-    if (LinechartInstance) {
-        LinechartInstance.destroy();
-    }
-    // Update line graph with the fetched data
-    // You need to use Chart.js or any other chart library to update the graph
-    var labels = data.map(function(entry) {
-        return formatDate(entry.timestamp);
-    });
-
-    var revenueData = data.map(function(entry) {
-        return entry.revenue;
-    });
-
-    var ctx = document.getElementById('productRevenueChart').getContext('2d');
-    LinechartInstance = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Revenue',
-                data: revenueData,
-                borderColor: 'rgb(75, 192, 192)',
-                borderWidth: 1,
-                fill: false
-            }]
+function fetchCountryData() {
+    $.ajax({
+        url: BASE_URL+'reports/countries/active',
+        type: 'GET',
+        success: function(data) {
+            console.log('Fetched country data:', data);
+            populateCountryDropdown(data);
         },
-        options: {
-            scales: {
-                xAxes: [{
-                    type: 'time',
-                    time: {
-                        parser: 'YYYY-MM-DD', // Specify the date format
-                        unit: 'day'
-                    }
-                }],
-                yAxes: [{
-                    ticks: {
-                        beginAtZero: true
-                    }
-                }]
-            }
+        error: function(error) {
+            console.error('Error fetching country data:', error);
         }
     });
 }
 
-// Function to format timestamp to "yyyy-mm-dd" format
-function formatDate(timestamp) {
-    var date = new Date(timestamp);
-    var year = date.getFullYear();
-    var month = ('0' + (date.getMonth() + 1)).slice(-2); // Add leading zero if month is less than 10
-    var day = ('0' + date.getDate()).slice(-2); // Add leading zero if day is less than 10
-    return year + '-' + month + '-' + day;
-}
-
-function fetchPieData(timeRange) {
-    // Generate simulated data based on time range
-    var simulatedData = generateSimulatedPieData(timeRange);
-
-    // Process and update pie chart with the fetched data
-    updatePieChart(simulatedData);
-}
-
-function generateSimulatedPieData(timeRange) {
-    // Simulate data for demonstration
-    var data = [];
-    var statuses = {
-        0: "Not Verified",
-        1: "Verified at Branch",
-        3: "Approved at Card Centre",
-        5: "File Imported",
-        6: "Dispatched (Acknowledged at Center)"
-    };
-    for (var status in statuses) {
-        data.push({
-            status: statuses[status],
-            count: Math.floor(Math.random() * 100) // Random count for demonstration
-        });
-    }
-    return data;
-}
-
-var PiechartInstance;
-
-function updatePieChart(data) {
-
-    if (PiechartInstance) {
-        PiechartInstance.destroy();
-    }
-
-    // Update pie chart with the fetched data
-    var labels = data.map(function(entry) {
-        return entry.status;
+function populateCountryDropdown(countries) {
+    var countryDropdown = $('#country-dropdown');
+    countryDropdown.empty(); // Clear existing options
+    // Add default option
+    countryDropdown.append('<option value="">Select Country</option>');
+    countries.forEach(function(country) {
+        countryDropdown.append('<option value="' + country.code + '">' + country.name + '</option>');
     });
+}
 
-    var counts = data.map(function(entry) {
-        return entry.count;
+function fetchBranches(countryCode) {
+    $.ajax({
+        url: BASE_URL+'reports/branches/by-country/active?countryCode='+countryCode,
+        type: 'GET',
+        success: function(data) {
+            console.log('Fetched branches:', data);
+            populateBranches(data);
+        },
+        error: function(error) {
+            console.error('Error fetching branches:', error);
+        }
     });
+}
 
-    var ctx = document.getElementById('orderStatusChart').getContext('2d');
-    PiechartInstance = new Chart(ctx, {
+function populateBranches(branches) {
+    var branchDropdown = $('#branch-dropdown');
+    branchDropdown.empty(); // Clear existing options
+    // Add default option
+    branchDropdown.append('<option value="">Select Branch</option>');
+    branches.forEach(function(branch) {
+        branchDropdown.append('<option value="' + branch.code + '">' + branch.name + '</option>');
+    });
+}
+
+function fetchProducts(branchCode,countryCode) {
+    $.ajax({
+        url: BASE_URL+'reports/products/by-country?countryCode='+countryCode,
+        type: 'GET',
+        success: function(data) {
+            console.log('Fetched products:', data);
+            FetchOrderswithProduct(data,branchCode);
+            populateProducts(data);
+        },
+        error: function(error) {
+            console.error('Error fetching products:', error);
+        }
+    });
+}
+
+function populateProducts(products) {
+    var productDropdown = $('#product-dropdown');
+    productDropdown.empty(); // Clear existing options
+    // Add default option
+    productDropdown.append('<option value="">Select Product</option>');
+    
+    products.forEach(function(product) {
+        productDropdown.append('<option value="' + product.code + '">' + product.name + '</option>');
+    });
+}
+
+function fetchOrders(countryCode, branchCode) {
+    $.ajax({
+        url: BASE_URL+'reports/orders/by-branch-and-country/'+countryCode+'/'+branchCode,
+        type: 'GET',
+        success: function(data) {
+            // console.log('Fetched orders:', data);
+            displayStatusPieChart(data);
+            // populateOrders(data);
+            var recievedOrders = data.filter(function(order) {
+                return order.status === 7;
+            });
+
+            Total_Quantity = calculateQuantity(recievedOrders);
+            
+            // displayPieChart(Total_Quantity);
+        },
+        error: function(error) {
+            console.error('Error fetching orders:', error);
+        }
+    });
+}
+
+function calculateQuantity(orders) {
+    var Total_Quantity = 0;
+    orders.forEach(function(order) {
+        Total_Quantity += order.quantity;
+    });
+    return Total_Quantity;
+}
+
+function fetchCardsIssued(countryCode, branchCode) {
+    $.ajax({
+        url: BASE_URL+'reports/plastics/by-branch/'+countryCode+'/'+branchCode,
+        type: 'GET',
+        success: function(data) {
+            // console.log('Fetched cards issued:', data);
+            // processCardsIssued(data);
+            var Total_Issued = data.filter(function(card) {
+                return card.status === 2;
+            }).length;
+            // console.log('Total Cards:', Total_Issued);
+            // console.log('Total Quantity:', Total_Quantity);
+            var availableCards = Total_Quantity - Total_Issued;
+            // console.log('Available Cards:', availableCards);
+            displayPieChart(Total_Issued, availableCards);
+        },
+        error: function(error) {
+            console.error('Error fetching cards issued:', error);
+        }
+    });
+}
+
+function displayPieChart(Total_Issued, availableCards) {
+    var ctx = document.getElementById('inventoryChart').getContext('2d');
+    var myChart = new Chart(ctx, {
         type: 'doughnut',
         data: {
-            labels: labels,
+            labels: ['Total Issued', 'Available Cards'],
             datasets: [{
-                data: counts,
+                label: 'Cards Issued',
+                data: [Total_Issued, availableCards],
                 backgroundColor: [
                     'rgba(255, 99, 132, 1)',
-                    'rgba(54, 162, 235, 1)',
-                    'rgba(255, 206, 86, 1)',
-                    'rgba(75, 192, 192, 1)',
-                    'rgba(153, 102, 255, 1)'
+                    'rgba(54, 162, 235, 1)'
                 ],
                 borderColor: [
                     'rgba(255, 99, 132, 1)',
-                    'rgba(54, 162, 235, 1)',
-                    'rgba(255, 206, 86, 1)',
-                    'rgba(75, 192, 192, 1)',
-                    'rgba(153, 102, 255, 1)'
+                    'rgba(54, 162, 235, 1)'
                 ],
                 borderWidth: 1
             }]
@@ -249,5 +193,148 @@ function updatePieChart(data) {
                 position: 'bottom'
             }
         }
+    });
+}
+
+function displayStatusPieChart(orders){
+    var statusCounts = {
+        0: 0, // Not verified
+        1: 0, // Verified at branch
+        3: 0, // Approved at card centre
+        5: 0, // File imported
+        6: 0, // Dispatched (acknowledged at center)
+        7: 0  // Received
+    };
+
+    orders.forEach(function(order) {
+        statusCounts[order.status] += 1;
+    });
+
+    var ctx = document.getElementById('orderStatusChart').getContext('2d');
+    var chart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Not Verified', 'Verified at Branch', 'Approved at Card Centre', 'File Imported', 'Dispatched', 'Received'],
+            datasets: [{
+                data: [
+                    statusCounts[0],
+                    statusCounts[1],
+                    statusCounts[3],
+                    statusCounts[5],
+                    statusCounts[6],
+                    statusCounts[7]
+                ],
+                backgroundColor: [
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(153, 102, 255, 1)',
+                    'rgba(255, 159, 64, 1)'
+                ],
+                borderColor: [
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(153, 102, 255, 1)',
+                    'rgba(255, 159, 64, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            legend: {
+                display: true,
+                position: 'bottom'
+            }
+        }
+    });
+
+}
+
+
+
+function FetchOrderswithProduct(products,branchCode){
+    products.forEach(product => {
+        $.ajax({
+            url: BASE_URL+'reports/orders/by-branch-and-product/'+branchCode+'/'+product.bin,
+            type: 'GET',
+            success: function(data) {
+                // console.log('Fetched orders:', data);
+                processOrders(data,products);
+            },
+            error: function(error) {
+                console.error('Error fetching orders:', error);
+            }
+        });
+
+    });
+}
+
+function FetchCardsIssuedByProduct(products,countryCode,branchCode){
+    products.forEach(product => {
+        $.ajax({
+            url: BASE_URL+'reports/plastics/by-product/'+product.bin+'/'+countryCode+'/'+branchCode,
+            type: 'GET',
+            success: function(data) {
+                // console.log('Fetched cards issued:', data);
+                processCardsIssued(data);
+            },
+            error: function(error) {
+                console.error('Error fetching cards issued:', error);
+            }
+        });
+
+    });
+}
+
+function processOrders(orders,products) {
+    var recievedOrders = orders.filter(function(order) {
+        return order.status === 7;
+    });
+
+    // console.log('Recieved Orders:', recievedOrders);
+    // console.log('Products:', products);
+    var productStats = {};
+
+    products.forEach(function(product) {
+        productStats[product.code] = {
+            product_name: product.code,
+            total_orders: 0,
+            total_cards_issued: 0,
+            total_cards_remaining:0
+        };
+
+        recievedOrders.forEach(function(order){
+            if (order.productCode === product.bin) {
+                productStats[product.code].total_orders += order.quantity;
+            }
+        });
+
+        displayTable(productStats);
+
+    });
+
+}
+
+function processCardsIssued(cards,productStats) {
+    console.log('Cards:', cards);
+    cards.forEach(function(card) {
+        if (card.status === 2) {
+            productStats[card.productCode].total_cards_issued += 1;
+        }
+    });
+
+    displayTable(productStats);
+}
+
+function displayTable(productStats) {
+    var tableBody = $('#product_inventory tbody');
+    tableBody.empty(); // Clear existing rows
+    Object.keys(productStats).forEach(function(productName) {
+        var product = productStats[productName];
+        var cardsRemaining = product.total_orders - product.total_cards_issued;
+        tableBody.append('<tr><td>' + product.product_name + '</td><td>' + product.total_orders + '</td><td>' + product.total_cards_issued + '</td>'+'<td>'+ cardsRemaining +'</td></tr>');
     });
 }
