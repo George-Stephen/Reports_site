@@ -95,7 +95,7 @@ function fetchProducts(branchCode,countryCode) {
         type: 'GET',
         success: function(data) {
             console.log('Fetched products:', data);
-            FetchOrderswithProduct(data,branchCode);
+            FetchOrderswithProduct(data,branchCode,countryCode);
             populateProducts(data);
         },
         error: function(error) {
@@ -255,7 +255,10 @@ function displayStatusPieChart(orders){
 
 
 
-function FetchOrderswithProduct(products,branchCode){
+function FetchOrderswithProduct(products,branchCode,countryCode){
+    // console.log('Products:', products);
+    // console.log('Branch:', branchCode);
+    // console.log('Country:', countryCode);
     products.forEach(product => {
         $.ajax({
             url: BASE_URL+'reports/orders/by-branch-and-product/'+branchCode+'/'+product.bin,
@@ -263,6 +266,8 @@ function FetchOrderswithProduct(products,branchCode){
             success: function(data) {
                 // console.log('Fetched orders:', data);
                 processOrders(data,products);
+                
+                FetchCardsIssuedByProduct(products,countryCode,branchCode);
             },
             error: function(error) {
                 console.error('Error fetching orders:', error);
@@ -272,10 +277,41 @@ function FetchOrderswithProduct(products,branchCode){
     });
 }
 
+var productStats = {};
+
+function processOrders(orders,products) {
+    var recievedOrders = orders.filter(function(order) {
+        return order.status === 7;
+    });
+
+    // console.log('Recieved Orders:', recievedOrders);
+    // console.log('Products:', products);
+    
+
+    products.forEach(function(product) {
+        productStats[product.code] = {
+            product_name: product.code,
+            total_orders: 0,
+            total_cards_issued: 0
+        };
+
+        recievedOrders.forEach(function(order){
+            if (order.productCode === product.bin) {
+                productStats[product.code].total_orders += order.quantity;
+            }
+        });
+
+        displayTable(productStats);
+
+    });
+
+
+}
+
 function FetchCardsIssuedByProduct(products,countryCode,branchCode){
     products.forEach(product => {
         $.ajax({
-            url: BASE_URL+'reports/plastics/by-product/'+product.bin+'/'+countryCode+'/'+branchCode,
+            url: BASE_URL+'reports/plastics/by-product/'+product.code+'/'+countryCode+'/'+branchCode,
             type: 'GET',
             success: function(data) {
                 // console.log('Fetched cards issued:', data);
@@ -289,44 +325,25 @@ function FetchCardsIssuedByProduct(products,countryCode,branchCode){
     });
 }
 
-function processOrders(orders,products) {
-    var recievedOrders = orders.filter(function(order) {
-        return order.status === 7;
-    });
+function processCardsIssued(cards) {
 
-    // console.log('Recieved Orders:', recievedOrders);
-    // console.log('Products:', products);
-    var productStats = {};
+        // console.log('Cards:', cards);
+        // console.log('Product Stats:', productStats);
 
-    products.forEach(function(product) {
-        productStats[product.code] = {
-            product_name: product.code,
-            total_orders: 0,
-            total_cards_issued: 0,
-            total_cards_remaining:0
-        };
-
-        recievedOrders.forEach(function(order){
-            if (order.productCode === product.bin) {
-                productStats[product.code].total_orders += order.quantity;
-            }
-        });
-
-        displayTable(productStats);
-
-    });
-
-}
-
-function processCardsIssued(cards,productStats) {
-    console.log('Cards:', cards);
-    cards.forEach(function(card) {
-        if (card.status === 2) {
-            productStats[card.productCode].total_cards_issued += 1;
+        // Check if the cards array is not empty
+        if (cards.length > 0) {
+            console.log('Cards:', cards);
+            cards.forEach(function(card) {
+                // Check if card and card.productCode are defined and not null
+                if (productStats[card.productCode]) {
+                    if (card.status === 2) {
+                        console.log('Card:', card);
+                        productStats[card.productCode].total_cards_issued += 1;
+                    }
+                }
+            });
         }
-    });
-
-    displayTable(productStats);
+        displayTable(productStats);
 }
 
 function displayTable(productStats) {
