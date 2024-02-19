@@ -24,12 +24,27 @@ $(document).ready(function(){
 
 
     // Handle dropdown change event
-    $('#time-range, #product-dropdown').change(function() {
-        var selectedTimeRange = $('#time-range').val();
-        var selectedProduct = $('#product-dropdown').val();
-        console.log('Selected time range:', selectedTimeRange);
-        fetchData(selectedTimeRange, selectedProduct);
+    // $('#time-range, #product-dropdown').change(function() {
+    //     var selectedBranch = $('#branch-dropdown').val();
+    //     var selectedProduct = $('#product-dropdown').val();
+    //     // console.log('Selected time range:', selectedTimeRange);
+    //     fetchCardApplication(selectedBranch,selectedProduct);
+    // });
+
+    // Event listener for dropdown change
+$('#time-range, #product-dropdown').change(function() {
+    var branchCode = $('#branch-dropdown').val();
+    var productCode = $('#product-dropdown').val();
+
+    fetchCardApplication(branchCode, productCode).then(function(data) {   
+        var filteredApplication = filterApplicationByTimeRange(data);
+        return calculateRevenue(filteredApplication);
+    }).then(function(revenueData) {
+        displayLineGraph(revenueData);
+    }).catch(function(error) {
+        console.error('Error:', error);
     });
+});
 
     // Export to PDF
     $('#ExportPdf').click(function(){
@@ -111,7 +126,7 @@ function populateProducts(products) {
     productDropdown.append('<option value="">Select Product</option>');
     
     products.forEach(function(product) {
-        productDropdown.append('<option value="' + product.code + '">' + product.name + '</option>');
+        productDropdown.append('<option value="' + product.bin + '">' + product.name + '</option>');
     });
 }
 
@@ -121,6 +136,8 @@ function fetchOrders(countryCode, branchCode) {
         type: 'GET',
         success: function(data) {
             // console.log('Fetched orders:', data);
+            processOrdersByProduct(data);
+
             displayStatusPieChart(data);
             // populateOrders(data);
             var recievedOrders = data.filter(function(order) {
@@ -138,7 +155,7 @@ function fetchOrders(countryCode, branchCode) {
 }
 
 function calculateQuantity(orders) {
-    var Total_Quantity = 0;
+    // var Total_Quantity = 0;
     orders.forEach(function(order) {
         Total_Quantity += order.quantity;
     });
@@ -155,11 +172,20 @@ function fetchCardsIssued(countryCode, branchCode) {
             var Total_Issued = data.filter(function(card) {
                 return card.status === 2;
             }).length;
+
+            var Destroyed_Cards = data.filter(function(card) {
+                return card.status === 5;
+            });
+
+            displayDestroyedCardsTable(Destroyed_Cards);
+
+            var Destroyed_Card_number = Destroyed_Cards.length;
             // console.log('Total Cards:', Total_Issued);
             // console.log('Total Quantity:', Total_Quantity);
-            var availableCards = Total_Quantity - Total_Issued;
+            // console.log('Destroyed Cards:', Destroyed_Card_number);
+            var availableCards = Total_Quantity - Total_Issued - Destroyed_Card_number;
             // console.log('Available Cards:', availableCards);
-            displayPieChart(Total_Issued, availableCards);
+            displayPieChart(Total_Issued, availableCards,Destroyed_Card_number);
         },
         error: function(error) {
             console.error('Error fetching cards issued:', error);
@@ -167,22 +193,32 @@ function fetchCardsIssued(countryCode, branchCode) {
     });
 }
 
-function displayPieChart(Total_Issued, availableCards) {
+var PieChart;
+
+function displayPieChart(Total_Issued, availableCards, Destroyed_Cards) {
+
+    if (PieChart) {
+        // If a chart instance exists, destroy it
+        PieChart.destroy();
+    }
     var ctx = document.getElementById('inventoryChart').getContext('2d');
-    var myChart = new Chart(ctx, {
+    PieChart = new Chart(ctx, {
         type: 'doughnut',
         data: {
-            labels: ['Total Issued', 'Available Cards'],
+            labels: ['Total Issued', 'Available Cards', 'Destroyed Cards'],
             datasets: [{
                 label: 'Cards Issued',
-                data: [Total_Issued, availableCards],
+                data: [Total_Issued, availableCards,Destroyed_Cards],
                 backgroundColor: [
                     'rgba(255, 99, 132, 1)',
-                    'rgba(54, 162, 235, 1)'
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)'
                 ],
                 borderColor: [
                     'rgba(255, 99, 132, 1)',
-                    'rgba(54, 162, 235, 1)'
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)'
+
                 ],
                 borderWidth: 1
             }]
@@ -196,7 +232,22 @@ function displayPieChart(Total_Issued, availableCards) {
     });
 }
 
+function displayDestroyedCardsTable(Destroyed_Cards) {
+    var tableBody = $('#destroyed_cards tbody');
+    tableBody.empty(); // Clear existing rows
+    Destroyed_Cards.forEach(function(card) {
+        tableBody.append('<tr><td>' + card.orderReference + '</td><td>' + card.productCode + '</td><td>'+ card.pan+ '</td><td>' + card.serial +'</td></tr>');
+    });
+}
+
+var statusPieChart;
+
 function displayStatusPieChart(orders){
+    if (statusPieChart) {
+        // If a chart instance exists, destroy it
+        statusPieChart.destroy();
+    }
+
     var statusCounts = {
         0: 0, // Not verified
         1: 0, // Verified at branch
@@ -211,7 +262,7 @@ function displayStatusPieChart(orders){
     });
 
     var ctx = document.getElementById('orderStatusChart').getContext('2d');
-    var chart = new Chart(ctx, {
+    statusPieChart = new Chart(ctx, {
         type: 'doughnut',
         data: {
             labels: ['Not Verified', 'Verified at Branch', 'Approved at Card Centre', 'File Imported', 'Dispatched', 'Received'],
@@ -353,5 +404,202 @@ function displayTable(productStats) {
         var product = productStats[productName];
         var cardsRemaining = product.total_orders - product.total_cards_issued;
         tableBody.append('<tr><td>' + product.product_name + '</td><td>' + product.total_orders + '</td><td>' + product.total_cards_issued + '</td>'+'<td>'+ cardsRemaining +'</td></tr>');
+    });
+}
+
+
+var orderDetails = [];
+
+function processOrdersByProduct(orders) {
+    var recievedOrders = orders.filter(function(order) {
+        return order.status === 7;
+    });
+    
+    console.log('Recieved Orders:', recievedOrders);
+    
+    recievedOrders.forEach(function(order) {
+        fetchProductNameUsingOrder(order.productCode, function(productName) {
+            fetchCardsIssuedByOrder(order.reference,function(cards){
+                console.log('Cards:', cards);
+    
+                var cards_issued = 0;
+    
+                cards.forEach(function(card) {
+                    if (card.status === 2) {
+                        cards_issued += 1;
+                    }
+                });
+    
+                var cards_remaining = order.quantity - cards_issued;
+    
+                var orderDetail = {
+                    order_reference_number: order.reference,
+                    product_name: productName,
+                    quantity_ordered: order.quantity,
+                    total_cards_issued: cards_issued,
+                    remaining_cards: cards_remaining
+                };
+    
+                orderDetails.push(orderDetail);
+    
+                if (orderDetails.length === recievedOrders.length) {
+                    displayOrdersTable(orderDetails);
+                }
+            });
+        });
+    });
+}
+
+function fetchCardsIssuedByOrder(orderReference, callback) {
+    $.ajax({
+        url: BASE_URL+'reports/plastics/by-order/'+orderReference,
+        type: 'GET',
+        success: function(data) {
+            callback(data);
+        },
+        error: function(error) {
+            console.error('Error fetching cards issued by order:', error);
+        }
+    });
+}
+
+function fetchProductNameUsingOrder(productCode, callback) {
+    $.ajax({
+        url: BASE_URL+'reports/products/by-bin?bin='+productCode,
+        type: 'GET',
+        success: function(data) {
+            callback(data.name);
+        },
+        error: function(error) {
+            console.error('Error fetching product name:', error);
+        }
+    });
+}
+
+function displayOrdersTable(orderDetails) {
+    var tableBody = $('#order_inventory tbody');
+    tableBody.empty(); // Clear existing rows
+    orderDetails.forEach(function(order) {
+        tableBody.append('<tr><td>' + order.order_reference_number + '</td><td>' + order.product_name + '</td><td>' + order.quantity_ordered + '</td><td>' + order.total_cards_issued + '</td><td>' + order.remaining_cards + '</td></tr>');
+    });
+}
+function fetchCardApplication(branchCode, productCode) {
+    $.ajax({
+        url: BASE_URL + 'reports/applications/by-product/by-branch?productCode=' + productCode + '&branchCode=' + branchCode,
+        type: 'GET',
+        success: function(data) {
+            var filteredApplications = filterApplicationByTimeRange(data);
+            if (filteredApplications.length > 0) {
+                calculateRevenue(filteredApplications);
+            }else
+            {
+                displayLineGraph([],[]);
+            }
+        },
+        error: function(error) {
+            console.error('Error fetching card application:', error);
+        }
+    });
+}
+
+function filterApplicationByTimeRange(applications) {
+    var selectedTimeRange = $('#time-range').val();
+    var startDate = calculateStartDate(selectedTimeRange);
+
+    return applications.filter(function(application) {
+        console.log('Application Date:', application.applicationDate);
+        var applicationDate = new Date(application.applicationDate).toISOString().split('T')[0];
+        console.log('Start Date:', startDate);
+        console.log('Application Date:', applicationDate);
+        console.log('Is application date greater than or equal to start date:', applicationDate >= startDate);
+        return applicationDate >= startDate;
+    });
+}
+
+function calculateStartDate(selectedTimeRange) {
+    var currentDate = new Date();
+    var startDate;
+
+    switch (selectedTimeRange) {
+        case 'today':
+            startDate = new Date(currentDate.setHours(0, 0, 0, 0));
+            break;
+        case 'one-week':
+            startDate = new Date(currentDate.getTime() - 7 * 24 * 60 * 60 * 1000);
+            break;
+        case 'one-month':
+            startDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, currentDate.getDate());
+            break;
+        case 'six-months':
+            startDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - 6, currentDate.getDate());
+            break;
+        case 'one-year':
+            startDate = new Date(currentDate.getFullYear() - 1, currentDate.getMonth(), currentDate.getDate());
+            break;
+        default:
+            startDate = currentDate;
+            break;
+    }
+
+    // Convert start date to YYYY-MM-DD format
+    return startDate.toISOString().split('T')[0];
+}
+
+
+function calculateRevenue(applications) {
+    var reference = [];
+    var revenueData = [];
+
+    applications.forEach(function(application) {
+        var applicationDate = new Date(application.applicationDate);
+        var formattedDate = applicationDate.toISOString().split('T')[0];
+        reference.push(formattedDate); // Store applicationDate as x-axis labels
+        if (application.issueDate != null) {
+            $.ajax({
+                url: BASE_URL + 'reports/revenue/by-ref?reference=' + application.reference,
+                type: 'GET',
+                success: function(data) {
+                    console.log('Fetched revenue:', data.fee);
+                    revenueData.push(parseInt(data.fee));
+                    displayLineGraph(reference, revenueData);
+                },
+                error: function(error) {
+                    console.error('Error fetching product:', error);
+                }
+            });
+        } else {
+            revenueData.push(0);
+            displayLineGraph(reference, revenueData);
+        }
+    });
+}
+
+var statusLineChart;
+
+function displayLineGraph(labels, data) {
+    var ctx = document.getElementById('productRevenueChart').getContext('2d');
+
+    if (statusLineChart) {
+        statusLineChart.destroy();
+    }
+
+    statusLineChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Revenue',
+                data: data,
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                borderColor: 'rgba(255, 99, 132, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            legend: {
+                display: true,
+                position: 'bottom'
+            }
+        }
     });
 }
