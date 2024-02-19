@@ -236,7 +236,7 @@ function displayDestroyedCardsTable(Destroyed_Cards) {
     var tableBody = $('#destroyed_cards tbody');
     tableBody.empty(); // Clear existing rows
     Destroyed_Cards.forEach(function(card) {
-        tableBody.append('<tr><td>' + card.orderReference + '</td><td>' + card.productCode + '</td><td>'+ card.pan+ '</td><td>' + card.serial +'</td></tr>');
+        tableBody.append('<tr><td>' + card.orderReference + '</td><td class="normal">' + card.productCode + '</td><td class="normal">'+ card.pan+ '</td><td class="normal">' + card.serial +'</td></tr>');
     });
 }
 

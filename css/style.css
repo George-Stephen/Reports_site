@@ -1,6 +1,9 @@
 body{
     background-color: #f4f4f4;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 400;
+    font-style: normal;
+    font-optical-sizing: auto;
     margin: 0;
     padding: 10px;
     text-align: center;
@@ -12,6 +15,32 @@ h1{
 
 h3{
     text-decoration: underline;
+    font-weight: 400;
+}
+
+
+th{
+    text-align: center;
+    font-weight: 400;
+}
+td{
+    white-space: nowrap;
+    overflow: hidden; /* Hide overflow content */
+    text-overflow: ellipsis; /* Show ellipsis for truncated text */
+    max-width: 110px;
+}
+
+.normal{
+    white-space: normal;
+    /* overflow: hidden; */
+    max-width: 250px;
+}
+
+td:hover {
+    overflow: visible;
+    white-space: normal;
+    background-color: #f0f0f0; /* Add a background color for better readability */
+    font-size: small;
 }
 
 #ExportPdf{
@@ -24,7 +53,8 @@ h3{
     font-size: 16px;
     border-radius: 50px;
     border: 2px solid #353131;
-    margin: 10px;
+    /* margin-top: 20px; */
+    margin: 18px;
     z-index: 1;
 }
 
@@ -34,8 +64,8 @@ h3{
     height: 40px;
     border-radius: 50%;
     background-color: #353131;
-    left: 25px;
-    top: 10px;
+    left: 34px;
+    top: 18px;
     bottom: 0;
     right: 0;
     z-index: 2;
@@ -114,16 +144,13 @@ h3{
 
 #filter_container select{
     padding: 10px 20px;
-    width: 250px;
+    width: 260px;
     height: 50px;
     border: none;
     border-radius: 15px;
-    margin: 10px;  
+    margin: 15px;  
 }
 
-#small_charts, #large_charts, body {
-    font-family: 'Montserrat', sans-serif;
-}
 
 #small_charts h3 {
     text-decoration: underline;
@@ -133,7 +160,7 @@ h3{
 
 #small_charts table{
     overflow-y:auto;
-    height:500px;
+    height:400px;
     display:block;
 }
 
@@ -144,9 +171,16 @@ h3{
 
 #large_charts table{
     overflow-y:auto;
-    height:500px;
+    height:400px;
     display:block;
     
+}
+#destroyed_cards table{
+    text-align: center;
+    overflow-y: auto;
+    height: 400px;
+    display: block;
+
 }
 
 .time_select select{
@@ -168,4 +202,33 @@ h3{
 
 #destroyed_products{
     margin-top: 50px;
+}
+
+#order_status #card{
+    display: flex;
+    justify-content: center;
+    align-content: center;
+    width: 100%; /* Ensure the container fills its parent */
+    height: 300px; /* Set the height of the container */
+
+}
+#order_status canvas{
+    max-width: 260px;
+    max-height: 260px;
+    width: 100%;
+    height: auto;
+}
+
+#small_charts canvas{
+    max-width: 260px;
+    max-height: 260px;
+    width: 100%;
+    height: auto;
+}
+
+#large_charts canvas{
+    max-width: 900px;
+    max-height: 300px;
+    width: 100%;
+    height: auto;
 }

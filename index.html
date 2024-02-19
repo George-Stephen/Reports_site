@@ -7,23 +7,23 @@
         <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@200&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="css/style.css">
     </head>
     <body>
         <div class="container" id="filter_container">
             <div class="row">
-                <div class="col-lg-3">
+                <div class="col">
                     <select id="country-dropdown">
                         <option value="1">Please select the country</option>
                     </select>   
                 </div>
-                <div class="col-lg-3 ">
+                <div class="col">
                     <select id="branch-dropdown">
                         <option value="1">Please select the branch</option>
                     </select> 
                 </div>
-                <div class="col-lg-3">
+                <div class="col">
                     <button type="button" id="ExportPdf">
                         <span class="circle">
                             <span class="arrow"> 
@@ -64,18 +64,16 @@
                         </table>
                     </div>
                 </div>
-            </div>
-        </div>
-        <hr>
-        <div>
-            <h3 class="text-center">Order status distribution</h3>
-            <div class="card">
-                <div class="card-body">
-                    <canvas id="orderStatusChart" width="50" height="50"></canvas>
+                <div id="order_status" class="col">
+                    <h3 class="text-center">Order status distribution</h3>
+                    <div class="card">
+                        <div class="card-body">
+                            <canvas id="orderStatusChart" width="50" height="50"></canvas>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        <hr>
         <div class="container" id="large_charts">
             <div class="row">
                 <div class="col">
@@ -103,9 +101,9 @@
                             <thead>
                               <tr>
                                 <th scope="col">Order Ref.</th>
-                                <th scope="col">Product code</th>
-                                <th scope="col">Pan</th>
-                                <th scope="col">Serial</th>
+                                <th scope="col" class="normal">Product code</th>
+                                <th scope="col" class="normal">Pan</th>
+                                <th scope="col" class="normal">Serial</th>
                               </tr>
                             </thead>
                             <tbody>
