@@ -23,14 +23,6 @@ $(document).ready(function(){
 
 
 
-    // Handle dropdown change event
-    // $('#time-range, #product-dropdown').change(function() {
-    //     var selectedBranch = $('#branch-dropdown').val();
-    //     var selectedProduct = $('#product-dropdown').val();
-    //     // console.log('Selected time range:', selectedTimeRange);
-    //     fetchCardApplication(selectedBranch,selectedProduct);
-    // });
-
     // Event listener for dropdown change
 $('#time-range, #product-dropdown').change(function() {
     var branchCode = $('#branch-dropdown').val();
@@ -97,7 +89,6 @@ function fetchBranches(countryCode) {
 function populateBranches(branches) {
     var branchDropdown = $('#branch-dropdown');
     branchDropdown.empty(); // Clear existing options
-    // Add default option
     branchDropdown.append('<option value="">Select Branch</option>');
     branches.forEach(function(branch) {
         branchDropdown.append('<option value="' + branch.code + '">' + branch.name + '</option>');
@@ -122,7 +113,6 @@ function fetchProducts(branchCode,countryCode) {
 function populateProducts(products) {
     var productDropdown = $('#product-dropdown');
     productDropdown.empty(); // Clear existing options
-    // Add default option
     productDropdown.append('<option value="">Select Product</option>');
     
     products.forEach(function(product) {
@@ -135,18 +125,13 @@ function fetchOrders(countryCode, branchCode) {
         url: BASE_URL+'reports/orders/by-branch-and-country/'+countryCode+'/'+branchCode,
         type: 'GET',
         success: function(data) {
-            // console.log('Fetched orders:', data);
             processOrdersByProduct(data);
-
             displayStatusPieChart(data);
-            // populateOrders(data);
             var recievedOrders = data.filter(function(order) {
                 return order.status === 7;
             });
 
             Total_Quantity = calculateQuantity(recievedOrders);
-            
-            // displayPieChart(Total_Quantity);
         },
         error: function(error) {
             console.error('Error fetching orders:', error);
@@ -178,13 +163,8 @@ function fetchCardsIssued(countryCode, branchCode) {
             });
 
             displayDestroyedCardsTable(Destroyed_Cards);
-
             var Destroyed_Card_number = Destroyed_Cards.length;
-            // console.log('Total Cards:', Total_Issued);
-            // console.log('Total Quantity:', Total_Quantity);
-            // console.log('Destroyed Cards:', Destroyed_Card_number);
             var availableCards = Total_Quantity - Total_Issued - Destroyed_Card_number;
-            // console.log('Available Cards:', availableCards);
             displayPieChart(Total_Issued, availableCards,Destroyed_Card_number);
         },
         error: function(error) {
@@ -233,12 +213,21 @@ function displayPieChart(Total_Issued, availableCards, Destroyed_Cards) {
 }
 
 function displayDestroyedCardsTable(Destroyed_Cards) {
-    var tableBody = $('#destroyed_cards tbody');
-    tableBody.empty(); // Clear existing rows
+    // Clear the existing data in the DataTable
+    var table = $('#destroyed_cards').DataTable();
+    table.clear().draw();
+
+    // Add each destroyed card to the DataTable
     Destroyed_Cards.forEach(function(card) {
-        tableBody.append('<tr><td>' + card.orderReference + '</td><td class="normal">' + card.productCode + '</td><td class="normal">'+ card.pan+ '</td><td class="normal">' + card.serial +'</td></tr>');
+        table.row.add([
+            card.orderReference,
+            card.productCode,
+            card.pan,
+            card.serial
+        ]).draw(false);
     });
 }
+
 
 var statusPieChart;
 
@@ -398,14 +387,23 @@ function processCardsIssued(cards) {
 }
 
 function displayTable(productStats) {
-    var tableBody = $('#product_inventory tbody');
-    tableBody.empty(); // Clear existing rows
+    // Clear the existing data in the DataTable
+    var table = $('#product_inventory').DataTable();
+    table.clear().draw();
+
+    // Add each product stat to the DataTable
     Object.keys(productStats).forEach(function(productName) {
         var product = productStats[productName];
         var cardsRemaining = product.total_orders - product.total_cards_issued;
-        tableBody.append('<tr><td>' + product.product_name + '</td><td>' + product.total_orders + '</td><td>' + product.total_cards_issued + '</td>'+'<td>'+ cardsRemaining +'</td></tr>');
+        table.row.add([
+            product.product_name,
+            product.total_orders,
+            product.total_cards_issued,
+            cardsRemaining
+        ]).draw(false);
     });
 }
+
 
 
 var orderDetails = [];
@@ -477,12 +475,19 @@ function fetchProductNameUsingOrder(productCode, callback) {
 }
 
 function displayOrdersTable(orderDetails) {
-    var tableBody = $('#order_inventory tbody');
-    tableBody.empty(); // Clear existing rows
-    orderDetails.forEach(function(order) {
-        tableBody.append('<tr><td>' + order.order_reference_number + '</td><td>' + order.product_name + '</td><td>' + order.quantity_ordered + '</td><td>' + order.total_cards_issued + '</td><td>' + order.remaining_cards + '</td></tr>');
+    // $('#order_inventory').DataTable().ajax.reload();
+    var table = $('#order_inventory').DataTable({
+        data: orderDetails,
+        columns: [
+            { data: 'order_reference_number' },
+            { data: 'product_name' },
+            { data: 'quantity_ordered' },
+            { data: 'total_cards_issued' },
+            { data: 'remaining_cards' }
+        ]
     });
 }
+
 function fetchCardApplication(branchCode, productCode) {
     $.ajax({
         url: BASE_URL + 'reports/applications/by-product/by-branch?productCode=' + productCode + '&branchCode=' + branchCode,
