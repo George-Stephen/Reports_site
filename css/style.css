@@ -45,7 +45,7 @@ td:hover {
 
 #ExportPdf{
     width: 300px;
-    height: 40px;
+    height: 45px;
     padding: 10px 20px;
     margin-left: 50px;
     border: none;
@@ -58,7 +58,7 @@ td:hover {
     z-index: 1;
 }
 
-.circle {
+/* .circle {
     position: absolute;
     width: 40px;
     height: 40px;
@@ -115,12 +115,12 @@ td:hover {
 #ExportPdf:hover .arrow::before{
     left: -10px;
     opacity: 1;
-}
+} */
 
 #ExportPdf .text{
     position: relative;
-    top: -5px;
-    left: 10px;
+    top: -1px;
+    left: 2px;
     z-index: 3;
     font-size: 15px;
     color: #353131;
@@ -131,9 +131,9 @@ td:hover {
     transition: .3s;
 }
 
-#ExportPdf:hover .text{
+/* #ExportPdf:hover .text{
     color: #fff;
-}
+} */
 
 #filter_container{
     margin-top: 25px;
@@ -144,8 +144,9 @@ td:hover {
 
 #filter_container select{
     padding: 10px 20px;
-    width: 260px;
-    height: 50px;
+    width: 300px;
+    height: 44px;
+    font-size: 15px;
     border: none;
     border-radius: 15px;
     margin: 15px;  
@@ -220,15 +221,16 @@ td:hover {
 }
 
 #small_charts canvas{
-    max-width: 260px;
-    max-height: 260px;
-    width: 100%;
+    width: 20%;
     height: auto;
+    max-width: 300px;
+    max-height: 300px;
 }
 
-#large_charts canvas{
-    max-width: 900px;
-    max-height: 300px;
-    width: 100%;
-    height: auto;
+#inventoryContainer{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
 }
+

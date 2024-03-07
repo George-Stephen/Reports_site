@@ -26,10 +26,10 @@
                 </div>
                 <div class="col">
                     <button type="button" id="ExportPdf">
-                        <span class="circle">
+                        <!-- <span class="circle">
                             <span class="arrow"> 
                             </span>
-                        </span>
+                        </span> -->
                          <span class="text">
                             Export to pdf
                          </span>
@@ -43,8 +43,8 @@
                 <div class="col">
                     <h3 class="text-center">Inventory</h3>
                     <div class="card text-center" id="inventory">
-                        <div class="card-body" >
-                            <canvas id="inventoryChart" width="50" height="50"></canvas>
+                        <div class="card-body" id="inventoryContainer">
+                            <canvas id="inventoryChart"></canvas>
                         </div>
                     </div>
                 </div>
@@ -68,8 +68,8 @@
                 <div id="order_status" class="col">
                     <h3 class="text-center">Order status distribution</h3>
                     <div class="card">
-                        <div class="card-body">
-                            <canvas id="orderStatusChart" width="50" height="50"></canvas>
+                        <div class="card-body" id="inventoryContainer">
+                            <canvas id="orderStatusChart"></canvas>
                         </div>
                     </div>
                 </div>
